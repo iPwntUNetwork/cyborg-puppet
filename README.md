@@ -150,28 +150,43 @@ esp32:esp32:m5stack_cores3:UploadSpeed=921600,FlashMode=qio,FlashSize=16M,Partit
 
 ## Flashing
 
-### Option A — Android (esp32_flasher app) — *recommended for the S22 workflow*
+> **See [`docs/FLASHING.md`](docs/FLASHING.md) for the full step-by-step guide,
+> including how to fix the "Failed to flashDeflBlock" error.**
 
-Flash the **merged binary** at offset `0x0`:
+### ⚠️ Important — read if you got "Failed to flashDeflBlock" at 98%
+
+The original 16MB merged binary caused flashing timeouts because it was a
+full-flash image padded with 0xFF. It has been **replaced with a 4MB trimmed
+merge** and individual component binaries. Use Method A below.
+
+### Method A — Individual components (RECOMMENDED — most reliable)
+
+Flash the 4 separate binaries at their offsets. Total ~1.1MB (vs 16MB). In
+esp32_flasher, set **Chip: ESP32-S3**, **Flash Mode: DIO**, **Flash Size:
+16MB**, **Baud: 460800** (drop to 115200 if it fails), then add:
+
+| # | File                                 | Offset    | Purpose              |
+|---|--------------------------------------|-----------|----------------------|
+| 1 | `CyborgPuppet.ino.bootloader.bin`    | `0x0`     | Bootloader           |
+| 2 | `CyborgPuppet.ino.partitions.bin`    | `0x8000`  | Partition table      |
+| 3 | `boot_app0.bin`                      | `0xe000`  | OTADATA              |
+| 4 | `CyborgPuppet.ino.bin`               | `0x10000` | Application firmware |
+
+Put the CoreS3 in download mode (hold the reset button while plugging USB),
+then tap Flash.
+
+### Method B — Single trimmed merged binary
+
+If your flasher only supports one file, use the **4MB trimmed merge**:
 
 ```
-CyborgPuppet/build/CyborgPuppet.ino.merged.bin   @ 0x0
+CyborgPuppet/build/CyborgPuppet.merged.bin   @ 0x0
 ```
 
-In the esp32_flasher app: select the merged `.bin`, set address `0x0`, choose
-the CoreS3's USB-CDC port, and flash. The merged image contains the
-bootloader + partition table + app in one file.
+This contains all 4 components in one 4MB file (75% smaller than the old 16MB
+image). Flash at offset `0x0`.
 
-### Option B — Individual components (advanced)
-
-| File                                 | Offset    |
-|--------------------------------------|-----------|
-| `CyborgPuppet.ino.bootloader.bin`    | `0x0`     |
-| `CyborgPuppet.ino.partitions.bin`    | `0x8000`  |
-| `boot_app0.bin`                      | `0xe000`  |
-| `CyborgPuppet.ino.bin`               | `0x10000` |
-
-### Option C — Arduino IDE
+### Method C — Arduino IDE
 
 Open `CyborgPuppet/CyborgPuppet.ino`, select the board/options above, click
 Upload.
@@ -184,11 +199,14 @@ Upload.
 CyborgPuppet/
 ├── CyborgPuppet.ino          # the firmware (single file, heavily commented)
 ├── build/                    # pre-built firmware binaries (verified compile)
-│   ├── CyborgPuppet.ino.merged.bin     # ← flash this at 0x0 (esp32_flasher)
+│   ├── CyborgPuppet.merged.bin         # ← 4MB trimmed merge, flash @ 0x0
 │   ├── CyborgPuppet.ino.bin            # app-only @ 0x10000
-│   ├── CyborgPuppet.ino.bootloader.bin
-│   └── CyborgPuppet.ino.partitions.bin
+│   ├── CyborgPuppet.ino.bootloader.bin # bootloader @ 0x0
+│   ├── CyborgPuppet.ino.partitions.bin # partition table @ 0x8000
+│   ├── boot_app0.bin                   # otadata @ 0xe000
+│   └── flash_manifest.json             # esp32_flasher manifest
 └── docs/
+    ├── FLASHING.md           # ★ flashing guide + flashDeflBlock fix
     ├── WIRING.md             # servo wiring options (PWM vs Feetech)
     └── BUILD.md              # reproducible arduino-cli build instructions
 ```

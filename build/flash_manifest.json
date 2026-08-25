@@ -1,0 +1,39 @@
+{
+  "_comment": "CyborgPuppet firmware - flashing manifest for esp32_flasher (Android)",
+  "_board": "M5Stack CoreS3 (ESP32-S3, 16MB Flash)",
+  "_partition_scheme": "Huge APP (huge_app)",
+  "_build_date": "2025-08-25",
+  "_esptool_version": "5.3.1",
+  "chip": "esp32s3",
+  "flash_mode": "dio",
+  "flash_freq": "80m",
+  "flash_size": "16MB",
+  "files": [
+    {
+      "offset": "0x0",
+      "path": "CyborgPuppet.ino.bootloader.bin",
+      "description": "Bootloader (2nd-stage, ROM loads this first)"
+    },
+    {
+      "offset": "0x8000",
+      "path": "CyborgPuppet.ino.partitions.bin",
+      "description": "Partition table (huge_app scheme)"
+    },
+    {
+      "offset": "0xe000",
+      "path": "boot_app0.bin",
+      "description": "OTADATA - tells bootloader which OTA slot to boot"
+    },
+    {
+      "offset": "0x10000",
+      "path": "CyborgPuppet.ino.bin",
+      "description": "Application firmware (CyborgPuppet)"
+    }
+  ],
+  "_single_file_alternative": {
+    "offset": "0x0",
+    "path": "CyborgPuppet.merged.bin",
+    "description": "Pre-merged single binary (4MB trimmed). Use this if your flasher only supports one file. Flash at offset 0x0.",
+    "_note": "This is a 4MB trimmed merge (NOT the 16MB full-flash image) to avoid the 'Failed to flashDeflBlock' timeout error that occurs with 16MB padded images."
+  }
+}
