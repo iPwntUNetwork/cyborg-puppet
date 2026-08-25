@@ -1,0 +1,15 @@
+# Keep pre-built firmware binaries (flashed from Android esp32_flasher).
+# Only ignore large transient build intermediates.
+
+# Linker map / ELF are huge and regenerable; the .bin artifacts are kept.
+*.map
+*.elf
+
+# Arduino/PlatformIO cruft
+*.hex
+.pio/
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db
